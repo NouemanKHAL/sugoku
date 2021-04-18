@@ -17,6 +17,10 @@ type sudokuGrid struct {
 	subGridMap  []map[rune]int
 }
 
+type coord struct {
+	x, y int
+}
+
 // New Returns an empty 9 x 9 Grid
 func New() *sudokuGrid {
 	sG := sudokuGrid{}
@@ -50,31 +54,30 @@ func (sG *sudokuGrid) reset() {
 }
 
 func (sG *sudokuGrid) Solve() error {
-	missingCells := [][2]int{}
+	missingCells := []coord{}
+
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			if sG.Grid[i][j] != EMPTY_CELL {
 				continue
 			}
-			missingCells = append(missingCells, [2]int{i, j})
+			missingCells = append(missingCells, coord{x: i, y: j})
 		}
 	}
 
-	fmt.Printf("#Missing Cells: %d\n", len(missingCells))
-
-	if !sG.solve(missingCells, 0) {
+	if !sG.solve(missingCells) {
 		return errors.New("No solution exists")
 	}
 	return nil
 }
 
-func (sG *sudokuGrid) solve(cells [][2]int, curIndex int) bool {
-	if curIndex == len(cells) {
+func (sG *sudokuGrid) solve(cells []coord) bool {
+	if len(cells) == 0 {
 		return true
 	}
 
-	x := cells[curIndex][0]
-	y := cells[curIndex][1]
+	x := cells[0].x
+	y := cells[0].y
 
 	for val := '1'; val <= '9'; val++ {
 		if !sG.checkIfExists(x, y, val) {
@@ -84,7 +87,7 @@ func (sG *sudokuGrid) solve(cells [][2]int, curIndex int) bool {
 			sG.Set(x, y, val)
 
 			// continue backtracking on the next cell
-			if sG.solve(cells, curIndex+1) {
+			if sG.solve(cells[1:]) {
 				return true
 			}
 
@@ -119,7 +122,7 @@ func (sG *sudokuGrid) Set(x, y int, val rune) error {
 }
 
 func (sG *sudokuGrid) getSubgridIndex(x, y int) int {
-	return (x/3)*3 + (y / 3)
+	return (x/3)*3 + y/3
 }
 
 func (sG *sudokuGrid) updateCount(x, y int, newValue rune) {
@@ -135,27 +138,15 @@ func (sG *sudokuGrid) updateCount(x, y int, newValue rune) {
 }
 
 func (sG *sudokuGrid) checkIfExists(x, y int, val rune) bool {
+	// check if val exists in x-th row or y-th column
 	if sG.rowsMap[x][val] > 0 || sG.colsMap[y][val] > 0 {
 		return true
 	}
-
+	// check if val exists in the current subgrid
 	if sG.subGridMap[sG.getSubgridIndex(x, y)][val] > 0 {
 		return true
 	}
-
 	return false
-}
-
-func (sG *sudokuGrid) IsValid() bool {
-	if len(sG.Grid) != 9 {
-		return false
-	}
-	for _, row := range sG.Grid {
-		if len(row) != 9 {
-			return false
-		}
-	}
-	return true
 }
 
 func (sG *sudokuGrid) ToString() string {
@@ -175,6 +166,18 @@ func (sG *sudokuGrid) Copy(grid [][]rune) {
 		for j := 0; j < 9; j++ {
 			sG.Set(i, j, grid[i][j])
 			if grid[i][j] != EMPTY_CELL {
+				sG.IsGenerated[i][j] = true
+			}
+		}
+	}
+}
+
+func (sG *sudokuGrid) CopyString(grid []string) {
+	sG.reset()
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			sG.Set(i, j, rune(grid[i][j]))
+			if rune(grid[i][j]) != EMPTY_CELL {
 				sG.IsGenerated[i][j] = true
 			}
 		}
