@@ -14,8 +14,7 @@ type sudokuGrid struct {
 	IsGenerated [][]bool
 	rowsMap     []map[rune]int
 	colsMap     []map[rune]int
-	leftDiag    map[rune]int
-	rightDiag   map[rune]int
+	subGridMap  []map[rune]int
 }
 
 // New Returns an empty 9 x 9 Grid
@@ -33,15 +32,14 @@ func New() *sudokuGrid {
 		}
 	}
 
-	sG.leftDiag = make(map[rune]int)
-	sG.rightDiag = make(map[rune]int)
-
 	sG.rowsMap = make([]map[rune]int, 9)
 	sG.colsMap = make([]map[rune]int, 9)
+	sG.subGridMap = make([]map[rune]int, 9)
 
 	for i := 0; i < 9; i++ {
 		sG.rowsMap[i] = make(map[rune]int)
 		sG.colsMap[i] = make(map[rune]int)
+		sG.subGridMap[i] = make(map[rune]int)
 	}
 
 	return &sG
@@ -55,12 +53,14 @@ func (sG *sudokuGrid) Solve() error {
 	missingCells := [][2]int{}
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
-			if sG.IsGenerated[i][j] || sG.Grid[i][j] != EMPTY_CELL {
+			if sG.Grid[i][j] != EMPTY_CELL {
 				continue
 			}
 			missingCells = append(missingCells, [2]int{i, j})
 		}
 	}
+
+	fmt.Printf("#Missing Cells: %d\n", len(missingCells))
 
 	if !sG.solve(missingCells, 0) {
 		return errors.New("No solution exists")
@@ -118,37 +118,31 @@ func (sG *sudokuGrid) Set(x, y int, val rune) error {
 	return nil
 }
 
+func (sG *sudokuGrid) getSubgridIndex(x, y int) int {
+	return (x/3)*3 + (y / 3)
+}
+
 func (sG *sudokuGrid) updateCount(x, y int, newValue rune) {
 	oldValue := sG.Grid[x][y]
 
-	// update diagonals
-	if x+y == 8 {
-		sG.leftDiag[oldValue]--
-		sG.leftDiag[newValue]++
-	}
-	if x == y {
-		sG.rightDiag[oldValue]--
-		sG.rightDiag[newValue]++
-	}
-
-	// update rows and columns
 	sG.rowsMap[x][oldValue]--
-	sG.rowsMap[x][newValue]++
-
 	sG.colsMap[y][oldValue]--
+	sG.subGridMap[sG.getSubgridIndex(x, y)][oldValue]--
+
+	sG.rowsMap[x][newValue]++
 	sG.colsMap[y][newValue]++
+	sG.subGridMap[sG.getSubgridIndex(x, y)][newValue]++
 }
 
 func (sG *sudokuGrid) checkIfExists(x, y int, val rune) bool {
 	if sG.rowsMap[x][val] > 0 || sG.colsMap[y][val] > 0 {
 		return true
 	}
-	if x == y && sG.leftDiag[val] > 0 {
+
+	if sG.subGridMap[sG.getSubgridIndex(x, y)][val] > 0 {
 		return true
 	}
-	if x+y == 8 && sG.rightDiag[val] > 0 {
-		return true
-	}
+
 	return false
 }
 
@@ -176,9 +170,13 @@ func (sG *sudokuGrid) ToString() string {
 }
 
 func (sG *sudokuGrid) Copy(grid [][]rune) {
+	sG.reset()
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			sG.Set(i, j, grid[i][j])
+			if grid[i][j] != EMPTY_CELL {
+				sG.IsGenerated[i][j] = true
+			}
 		}
 	}
 }
