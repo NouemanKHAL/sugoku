@@ -2,13 +2,17 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/NouemanKHAL/sudoku-solver-rest-api/sudoku"
 )
 
 func main() {
-	sG := sudoku.New()
-	fmt.Printf("%v\n\n", sG.ToString())
+	sG, err := sudoku.New(9, 3, 3)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%v\n\n", sG.ToStringPrettify())
 
 	inputGrid := [][]rune{
 		{'.', '.', '.', '.', '.', '3', '2', '1', '.'},
@@ -22,9 +26,18 @@ func main() {
 		{'.', '4', '9', '2', '.', '6', '7', '8', '.'},
 	}
 
+	// inputGrid := [][]rune{
+	// 	{'.', '6', '4', '.', '.', '.'},
+	// 	{'.', '3', '2', '1', '4', '6'},
+	// 	{'.', '.', '3', '.', '5', '1'},
+	// 	{'.', '5', '.', '6', '.', '2'},
+	// 	{'3', '4', '.', '2', '.', '.'},
+	// 	{'2', '.', '5', '3', '6', '4'},
+	// }
+
 	sG.Copy(inputGrid)
-	fmt.Printf("%v\n\n", sG.ToString())
+	fmt.Printf("%v\n\n", Serialize(sG))
 
 	sG.Solve()
-	fmt.Printf("%v\n\n", sG.ToString())
+	fmt.Printf("%v\n\n", sG.ToStringPrettify())
 }
