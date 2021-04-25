@@ -2,13 +2,39 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/NouemanKHAL/sudoku-solver-rest-api/sudoku"
 )
 
+func solveSudoku(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Body Error: received %s", string(body))
+		fmt.Fprintf(w, "Error: %s", err)
+		return
+	}
+	grid := string(body)
+	sG, err := sudoku.Deserialize(grid)
+	if err != nil {
+		fmt.Fprintf(w, "Deserialization Error: received %s", string(body))
+		fmt.Fprintf(w, "Error: %s", err)
+		return
+	}
+	fmt.Fprintf(w, "Initial Sudoku:\n%s", sG.ToStringPrettify())
+	sG.Solve()
+	fmt.Fprintf(w, "Solved:\n%s", sG.ToStringPrettify())
+}
+
 func main() {
-	sG, err := sudoku.New(9, 3, 3)
+	http.HandleFunc("/sudoku/solve", solveSudoku)
+	http.ListenAndServe("localhost:8080", nil)
+}
+
+/*
+sG, err := sudoku.New(9, 3, 3)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,19 +51,11 @@ func main() {
 		{'.', '7', '.', '.', '.', '.', '.', '2', '.'},
 		{'.', '4', '9', '2', '.', '6', '7', '8', '.'},
 	}
-
-	// inputGrid := [][]rune{
-	// 	{'.', '6', '4', '.', '.', '.'},
-	// 	{'.', '3', '2', '1', '4', '6'},
-	// 	{'.', '.', '3', '.', '5', '1'},
-	// 	{'.', '5', '.', '6', '.', '2'},
-	// 	{'3', '4', '.', '2', '.', '.'},
-	// 	{'2', '.', '5', '3', '6', '4'},
-	// }
-
 	sG.Copy(inputGrid)
-	fmt.Printf("%v\n\n", Serialize(sG))
-
-	sG.Solve()
-	fmt.Printf("%v\n\n", sG.ToStringPrettify())
-}
+	serialized := sudoku.Serialize(sG)
+	fmt.Println(serialized)
+	deserialized, _ := sudoku.Deserialize(serialized)
+	fmt.Println(deserialized.ToStringPrettify())
+	deserialized.Solve()
+	fmt.Println(deserialized.ToStringPrettify())
+*/

@@ -187,11 +187,12 @@ func Deserialize(data string) (*sudokuGrid, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	sG, err := New(size, partitionWidth, partitionHeight)
 	if err != nil {
 		return nil, err
 	}
-	sG.CopyString(tokens[2:])
+	sG.CopyString(tokens[3:])
 	return sG, nil
 }
 
