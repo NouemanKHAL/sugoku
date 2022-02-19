@@ -1,9 +1,9 @@
 package sudoku
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -12,7 +12,7 @@ const (
 	SEP_CHAR   string = "/"
 )
 
-type sudokuGrid struct {
+type SudokuGrid struct {
 	Size            int
 	PartitionWidth  int
 	PartitionHeight int
@@ -26,14 +26,13 @@ type coord struct {
 	x, y int
 }
 
-// New Returns an empty sG.Size x sG.Size Grid
-func New(size, partitionWidth, partitionHeight int) (*sudokuGrid, error) {
-
+// New Returns an empty sG.Size x sG.Size SudokuGrid
+func New(size, partitionWidth, partitionHeight int) (*SudokuGrid, error) {
 	if size%partitionHeight != 0 || size%partitionWidth != 0 || size%(partitionHeight*partitionWidth) != 0 {
 		return nil, errors.New("Size must be divisible by both Width and Height.")
 	}
 
-	sG := sudokuGrid{
+	sG := SudokuGrid{
 		Size:            size,
 		PartitionWidth:  partitionWidth,
 		PartitionHeight: partitionHeight,
@@ -57,15 +56,16 @@ func New(size, partitionWidth, partitionHeight int) (*sudokuGrid, error) {
 		sG.colsMap[i] = make(map[rune]bool)
 		sG.subGridMap[i] = make(map[rune]bool)
 	}
-
 	return &sG, nil
 }
 
-func (sG *sudokuGrid) Reset() {
+// Reset sets all the cells of the SudokuGrid to EMPTY_CELL value
+func (sG *SudokuGrid) Reset() {
 	sG, _ = New(sG.Size, sG.PartitionWidth, sG.PartitionHeight)
 }
 
-func (sG *sudokuGrid) Solve() error {
+// Solve solves the SudokuGrid in-place, returns an error if no solution exist
+func (sG *SudokuGrid) Solve() error {
 	missingCells := make([]coord, 0, sG.Size*sG.Size)
 
 	for i := 0; i < sG.Size; i++ {
@@ -82,7 +82,7 @@ func (sG *sudokuGrid) Solve() error {
 	return nil
 }
 
-func (sG *sudokuGrid) solve(cells []coord) bool {
+func (sG *SudokuGrid) solve(cells []coord) bool {
 	if len(cells) == 0 {
 		return true
 	}
@@ -91,7 +91,7 @@ func (sG *sudokuGrid) solve(cells []coord) bool {
 	y := cells[0].y
 
 	for val := '1'; val <= rune('0'+sG.Size); val++ {
-		if !sG.checkIfExists(x, y, val) {
+		if sG.canSet(x, y, val) {
 			oldValue := sG.Grid[x][y]
 
 			// try this value
@@ -109,12 +109,13 @@ func (sG *sudokuGrid) solve(cells []coord) bool {
 	return false
 }
 
-func (sG *sudokuGrid) isValidIndex(x, y int) bool {
+// isValidIndex returns true if the coordinates (x, y) represent a valid cell, and false otherwise
+func (sG *SudokuGrid) isValidIndex(x, y int) bool {
 	return x >= 0 || x < sG.Size || y >= 0 || y < sG.Size
 }
 
 // Get returns the value of the cell with coordinates (x, y)
-func (sG *sudokuGrid) Get(x, y int) (rune, error) {
+func (sG *SudokuGrid) Get(x, y int) (rune, error) {
 	if !sG.isValidIndex(x, y) {
 		return EMPTY_CELL, errors.New(fmt.Sprintf("Cell coordinates out of bounds. (%d, %d)", x, y))
 	}
@@ -122,7 +123,7 @@ func (sG *sudokuGrid) Get(x, y int) (rune, error) {
 }
 
 // Set sets the value of the cell with coordinates (x, y)
-func (sG *sudokuGrid) Set(x, y int, val rune) error {
+func (sG *SudokuGrid) Set(x, y int, val rune) error {
 	if !sG.isValidIndex(x, y) {
 		return errors.New(fmt.Sprintf("Cell coordinates out of bounds. (%d, %d)", x, y))
 	}
@@ -133,14 +134,15 @@ func (sG *sudokuGrid) Set(x, y int, val rune) error {
 	return nil
 }
 
-func (sG *sudokuGrid) GetSubgridIndex(x, y int) int {
-	// floor(x/A) * ROW_SIZE + floor(y/B)
+// GetSubgridIndex returns the index of the partition containing the cell with coordinates (x, y) in the partitions grid - subgrid -.
+func (sG *SudokuGrid) GetSubgridIndex(x, y int) int {
+	// floor(x/Height) * ROW_SIZE + floor(y/W)
 	// ROW_SIZE is the size of the compressed matrix where each cell represents a subgrid
-	subGridMatrixWidth := sG.Size / sG.PartitionWidth
-	return (x/sG.PartitionHeight)*(subGridMatrixWidth) + y/sG.PartitionWidth
+	compressedMatrixWidth := sG.Size / sG.PartitionWidth
+	return (x/sG.PartitionHeight)*(compressedMatrixWidth) + y/sG.PartitionWidth
 }
 
-func (sG *sudokuGrid) updateCount(x, y int, newValue rune) {
+func (sG *SudokuGrid) updateCount(x, y int, newValue rune) {
 	oldValue := sG.Grid[x][y]
 
 	// decrement row, col, subgrid count of the oldValue
@@ -154,90 +156,40 @@ func (sG *sudokuGrid) updateCount(x, y int, newValue rune) {
 	sG.subGridMap[sG.GetSubgridIndex(x, y)][newValue] = true
 }
 
-// checkIfExists returns true if the value exists in the same row, or same column, or same subgrid
-func (sG *sudokuGrid) checkIfExists(x, y int, val rune) bool {
-	return sG.rowsMap[x][val] || sG.colsMap[y][val] || sG.subGridMap[sG.GetSubgridIndex(x, y)][val]
+// canSet returns true if the given value doesn't exist in the same row (x), column (y), or subgrid
+func (sG *SudokuGrid) canSet(x, y int, val rune) bool {
+	return !(sG.rowsMap[x][val] || sG.colsMap[y][val] || sG.subGridMap[sG.GetSubgridIndex(x, y)][val])
 }
 
-func Serialize(sG *sudokuGrid) string {
-	res := fmt.Sprintf("%d/%d/%d/", sG.Size, sG.PartitionHeight, sG.PartitionWidth)
-	for _, row := range sG.Grid {
-		for _, cell := range row {
-			res += string(cell)
-		}
-		res += SEP_CHAR
-	}
-	return res
+func (sG *SudokuGrid) MarshalJSON() ([]byte, error) {
+	return json.Marshal(*sG)
 }
 
-func Deserialize(data string) (*sudokuGrid, error) {
-	tokens := strings.Split(data, SEP_CHAR)
-	if len(tokens) < 4 {
-		return nil, errors.New("Missing data or Incorrect format")
-	}
-	size, err := strconv.Atoi(tokens[0])
+func (sG *SudokuGrid) UnmarshalJSON(data []byte) error {
+	type sudokuGrid SudokuGrid
+	var tmpGrid sudokuGrid
+	err := json.Unmarshal(data, &tmpGrid)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	partitionWidth, err := strconv.Atoi(tokens[1])
-	if err != nil {
-		return nil, err
-	}
-	partitionHeight, err := strconv.Atoi(tokens[2])
-	if err != nil {
-		return nil, err
-	}
-
-	sG, err := New(size, partitionWidth, partitionHeight)
-	if err != nil {
-		return nil, err
-	}
-	sG.CopyString(tokens[3:])
-	return sG, nil
+	*sG = SudokuGrid(tmpGrid)
+	return nil
 }
 
-func (sG *sudokuGrid) ToStringPrettify() string {
-	res := ""
+// ToStringPrettify returns a formatted string representation of the SudokuGrid
+func (sG *SudokuGrid) ToStringPrettify() string {
+	var res strings.Builder
+	res.Grow(sG.Size * (2*sG.Size + 1))
 	for i := 0; i < sG.Size; i++ {
 		if i > 0 && i%sG.PartitionHeight == 0 {
-			res += fmt.Sprintf(strings.Repeat("-", sG.Size*3+2)) + "\n"
+			fmt.Fprintf(&res, "%s\n", strings.Repeat("-", sG.Size*3+2))
 		}
 		for j := 0; j < sG.Size; j++ {
 			if j > 0 && j%sG.PartitionWidth == 0 {
-				res += fmt.Sprintf("|")
+				fmt.Fprintf(&res, "|")
 			}
-			res += fmt.Sprintf("%2c ", sG.Grid[i][j])
-		}
-		res += "\n"
-	}
-	return res
-}
-
-func (sG *sudokuGrid) Copy(grid [][]rune) {
-	sG.Reset()
-	for i := 0; i < sG.Size; i++ {
-		for j := 0; j < sG.Size; j++ {
-			sG.Set(i, j, grid[i][j])
+			fmt.Fprintf(&res, "%2c \n", sG.Grid[i][j])
 		}
 	}
+	return res.String()
 }
-
-func (sG *sudokuGrid) CopyString(grid []string) {
-	sG.Reset()
-	for i := 0; i < sG.Size; i++ {
-		for j := 0; j < sG.Size; j++ {
-			sG.Set(i, j, rune(grid[i][j]))
-		}
-	}
-}
-
-/*
-
-TODO:
-	- Make Sudoku Grid Size Customizable SudokuGrid(N, A, B) 	-- DONE
-	- Remove isGenerated										-- DONE
-	- keep rune? use []int instead of map[rune]int ?
-
-
-
-*/

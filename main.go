@@ -3,59 +3,77 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/NouemanKHAL/sudoku-solver-rest-api/sudoku"
+	"github.com/gorilla/mux"
 )
 
-func solveSudoku(w http.ResponseWriter, r *http.Request) {
+var (
+	DEFAULT_PORT = "7007"
+)
+
+func HomeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Welcome to the Sudoki REST API v0.0.1"))
+}
+
+func SudokuGeneratorHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: implement a sudoku generator
+	params := r.URL.Query()
+	size := params.Get("size")
+	partitionHeight := params.Get("partitionHeight")
+	partitionWidth := params.Get("partitionWidth")
+	w.Write([]byte("generator under construction\nreceived " + fmt.Sprintf("size:%s,pHeight:%s,pWidth:%s", size, partitionHeight, partitionWidth)))
+}
+
+func SudokuSolverHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Fprintf(w, "Body Error: received %s", string(body))
-		fmt.Fprintf(w, "Error: %s", err)
-		return
+		w.Write([]byte(fmt.Sprintf("error reading the body: %s", err)))
 	}
-	grid := string(body)
-	sG, err := sudoku.Deserialize(grid)
+
+	sG := &sudoku.SudokuGrid{}
+	err = sG.UnmarshalJSON(body)
 	if err != nil {
-		fmt.Fprintf(w, "Deserialization Error: received %s", string(body))
-		fmt.Fprintf(w, "Error: %s", err)
-		return
+		w.Write([]byte(fmt.Sprintf("error unmarshaling the response: %s", err)))
 	}
-	fmt.Fprintf(w, "Initial Sudoku:\n%s", sG.ToStringPrettify())
-	sG.Solve()
-	fmt.Fprintf(w, "Solved:\n%s", sG.ToStringPrettify())
+
+	solvedGridBytes, err := sG.MarshalJSON()
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("error marshalling the solution: %s", err)))
+	}
+	w.Write(solvedGridBytes)
+}
+
+func SetupHandlers(r *mux.Router) {
+	r.HandleFunc("/", HomeHandler).Methods("GET")
+	r.HandleFunc("/sudoku", SudokuGeneratorHandler).Methods("GET")
+	r.HandleFunc("/sudoku", SudokuSolverHandler).Methods("POST")
+}
+
+func StartServer() {
+	r := mux.NewRouter()
+	SetupHandlers(r)
+
+	port := GetEnvWithDefault("SUDOKU_SERVER_PORT", DEFAULT_PORT)
+
+	log.Printf("starting server under localhost:%s\n", port)
+	err := http.ListenAndServe(fmt.Sprintf(":%s", port), r)
+	if err != nil {
+		log.Fatalf("Error starting server: %s", err)
+	}
 }
 
 func main() {
-	http.HandleFunc("/sudoku/solve", solveSudoku)
-	http.ListenAndServe("localhost:8080", nil)
+	StartServer()
 }
 
-/*
-sG, err := sudoku.New(9, 3, 3)
-	if err != nil {
-		log.Fatal(err)
+func GetEnvWithDefault(name, fallback string) string {
+	if envVar, ok := os.LookupEnv(name); ok {
+		return envVar
 	}
-	fmt.Printf("%v\n\n", sG.ToStringPrettify())
-
-	inputGrid := [][]rune{
-		{'.', '.', '.', '.', '.', '3', '2', '1', '.'},
-		{'1', '2', '.', '.', '.', '.', '4', '3', '6'},
-		{'.', '5', '4', '.', '2', '1', '.', '.', '.'},
-		{'2', '9', '5', '1', '.', '7', '3', '.', '8'},
-		{'.', '3', '5', '8', '5', '.', '6', '.', '.'},
-		{'7', '.', '6', '.', '9', '4', '.', '.', '2'},
-		{'8', '.', '.', '4', '.', '5', '9', '.', '3'},
-		{'.', '7', '.', '.', '.', '.', '.', '2', '.'},
-		{'.', '4', '9', '2', '.', '6', '7', '8', '.'},
-	}
-	sG.Copy(inputGrid)
-	serialized := sudoku.Serialize(sG)
-	fmt.Println(serialized)
-	deserialized, _ := sudoku.Deserialize(serialized)
-	fmt.Println(deserialized.ToStringPrettify())
-	deserialized.Solve()
-	fmt.Println(deserialized.ToStringPrettify())
-*/
+	return fallback
+}
