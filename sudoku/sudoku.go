@@ -13,10 +13,10 @@ const (
 )
 
 type SudokuGrid struct {
-	Size            int
-	PartitionWidth  int
-	PartitionHeight int
-	Grid            [][]rune
+	Size            int      `json:"Size"`
+	PartitionWidth  int      `json:"PartitionWidth"`
+	PartitionHeight int      `json:"PartitionHeight"`
+	Grid            [][]rune `json:"Grid"`
 	rowsMap         []map[rune]bool
 	colsMap         []map[rune]bool
 	subGridMap      []map[rune]bool
@@ -166,13 +166,13 @@ func (sG *SudokuGrid) MarshalJSON() ([]byte, error) {
 }
 
 func (sG *SudokuGrid) UnmarshalJSON(data []byte) error {
-	type sudokuGrid SudokuGrid
-	var tmpGrid sudokuGrid
-	err := json.Unmarshal(data, &tmpGrid)
+	type tmpSudoku SudokuGrid
+	var tmpStruct tmpSudoku
+	err := json.Unmarshal(data, &tmpStruct)
 	if err != nil {
 		return err
 	}
-	*sG = SudokuGrid(tmpGrid)
+	*sG = SudokuGrid(tmpStruct)
 	return nil
 }
 

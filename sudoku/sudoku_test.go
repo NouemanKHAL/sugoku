@@ -1,6 +1,8 @@
 package sudoku
 
 import (
+	"encoding/json"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -35,16 +37,17 @@ var _ = Describe("Sudoku", func() {
 			sG1, err := New(9, 3, 3)
 			Expect(err).To(BeNil())
 
-			sudokuGridBytes, err := sG1.MarshalJSON()
+			sudokuGridBytes, err := json.Marshal(sG1)
 			Expect(err).To(BeNil())
-			Expect(string(sudokuGridBytes)).To(Equal("{\"Size\":9,\"PartitionWidth\":3,\"PartitionHeight\":3,\"Grid\":[[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46]]}"))
+			Expect(string(sudokuGridBytes)).To(Equal(`{"Size":9,"PartitionWidth":3,"PartitionHeight":3,"Grid":[[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46]]}`))
 
 			sG2 := &SudokuGrid{}
-			err = sG2.UnmarshalJSON(sudokuGridBytes)
+			err = json.Unmarshal(sudokuGridBytes, sG2)
 			Expect(err).To(BeNil())
 			Expect(sG1.Size).To(Equal(sG2.Size))
 			Expect(sG1.PartitionHeight).To(Equal(sG2.PartitionHeight))
 			Expect(sG1.PartitionWidth).To(Equal(sG2.PartitionWidth))
+			Expect(sG1.Grid).To(Equal(sG2.Grid))
 		})
 	})
 
