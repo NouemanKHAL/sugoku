@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -29,23 +30,35 @@ func SudokuGeneratorHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SudokuSolverHandler(w http.ResponseWriter, r *http.Request) {
+	params := r.URL.Query()
+	pretty := params.Get("pretty")
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.Write([]byte(fmt.Sprintf("error reading the body: %s", err)))
+		w.Write([]byte(fmt.Sprintf("error reading the body: %v", err)))
 	}
 
-	sG := &sudoku.SudokuGrid{}
-	err = sG.UnmarshalJSON(body)
+	sG := sudoku.SudokuGrid{}
+	err = json.Unmarshal(body, &sG)
 	if err != nil {
-		w.Write([]byte(fmt.Sprintf("error unmarshaling the response: %s", err)))
+		w.Write([]byte(fmt.Sprintf("error unmarshaling the response: %v", err)))
+	}
+	err = sG.Solve()
+	if err != nil {
+		w.Write([]byte(fmt.Sprintf("error solving the sudoku grid: %v", err)))
 	}
 
-	solvedGridBytes, err := sG.MarshalJSON()
-	if err != nil {
-		w.Write([]byte(fmt.Sprintf("error marshalling the solution: %s", err)))
+	var res []byte
+
+	if pretty == "true" {
+		res = []byte(sG.ToStringPrettify())
+	} else {
+		res, err = json.Marshal(sG)
+		if err != nil {
+			w.Write([]byte(fmt.Sprintf("error marshalling the solution: %v", err)))
+		}
 	}
-	w.Write(solvedGridBytes)
+	w.Write(res)
 }
 
 func SetupHandlers(r *mux.Router) {
@@ -60,7 +73,7 @@ func StartServer() {
 
 	port := GetEnvWithDefault("SUDOKU_SERVER_PORT", DEFAULT_PORT)
 
-	log.Printf("starting server under localhost:%s\n", port)
+	log.Printf("Starting server under localhost:%s\n", port)
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), r)
 	if err != nil {
 		log.Fatalf("Error starting server: %s", err)
