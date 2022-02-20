@@ -84,6 +84,21 @@ var _ = Describe("Sudoku", func() {
 			}
 		})
 
+		Context("isValidIndex method", func() {
+			It("isValidIndex returns true if the given coordinates are not out of range", func() {
+				Expect(sG.isValidIndex(0, 0)).To(BeTrue())
+				Expect(sG.isValidIndex(sG.Size-1, 0)).To(BeTrue())
+				Expect(sG.isValidIndex(0, sG.Size-1)).To(BeTrue())
+			})
+
+			It("isValidIndex returns false if the given coordinates are out of range", func() {
+				Expect(sG.isValidIndex(-1, 0)).To(BeFalse())
+				Expect(sG.isValidIndex(0, -1)).To(BeFalse())
+				Expect(sG.isValidIndex(sG.Size, 0)).To(BeFalse())
+				Expect(sG.isValidIndex(0, sG.Size)).To(BeFalse())
+			})
+		})
+
 		Context("canSet method", func() {
 			It("canSet returns true if the value doesn't exist in the same row, the same column and the same subgrid", func() {
 				Expect(sG.canSet(0, 0, '9')).To(BeTrue()) // only valid value
