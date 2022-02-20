@@ -68,3 +68,13 @@ curl -X POST http://localhost:7007/sudoku?pretty=true -d {\"Size\":4,\"Partition
 
 - Done!
 
+## TO DO
+
+- Add more unit tests
+- Improve errors handling in the route handlers
+- Add request logging and validation middlewares
+- Add a Sudoku puzzle generator endpoint
+- Add authentication?
+- Support HTTPS?
+- Build a Front End
+- ...
