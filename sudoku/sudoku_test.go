@@ -48,6 +48,9 @@ var _ = Describe("Sudoku", func() {
 			Expect(sG1.PartitionHeight).To(Equal(sG2.PartitionHeight))
 			Expect(sG1.PartitionWidth).To(Equal(sG2.PartitionWidth))
 			Expect(sG1.Grid).To(Equal(sG2.Grid))
+			Expect(len(sG2.rowsMap)).To(Equal(9))
+			Expect(len(sG2.colsMap)).To(Equal(9))
+			Expect(len(sG2.subGridMap)).To(Equal(9))
 		})
 	})
 
@@ -95,6 +98,13 @@ var _ = Describe("Sudoku", func() {
 				Expect(sG.canSet(0, 0, '5')).To(BeFalse()) // same subgrid
 				Expect(sG.canSet(0, 0, '7')).To(BeFalse()) // same column
 				Expect(sG.canSet(0, 0, '8')).To(BeFalse()) // same column
+			})
+
+			It("canSet returns false if the given coordinates are not valid", func() {
+				Expect(sG.canSet(sG.Size, 0, '1')).To(BeFalse())
+				Expect(sG.canSet(0, sG.Size, '1')).To(BeFalse())
+				Expect(sG.canSet(-1, 0, '1')).To(BeFalse())
+				Expect(sG.canSet(0, -1, '2')).To(BeFalse())
 			})
 		})
 

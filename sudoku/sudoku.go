@@ -46,7 +46,11 @@ func New(size, partitionWidth, partitionHeight int) (*SudokuGrid, error) {
 			sG.Grid[i][j] = EMPTY_CELL
 		}
 	}
+	sG.initMetadata()
+	return &sG, nil
+}
 
+func (sG *SudokuGrid) initMetadata() {
 	sG.rowsMap = make([]map[rune]bool, sG.Size)
 	sG.colsMap = make([]map[rune]bool, sG.Size)
 	sG.subGridMap = make([]map[rune]bool, sG.Size)
@@ -56,7 +60,13 @@ func New(size, partitionWidth, partitionHeight int) (*SudokuGrid, error) {
 		sG.colsMap[i] = make(map[rune]bool)
 		sG.subGridMap[i] = make(map[rune]bool)
 	}
-	return &sG, nil
+
+	// update the state of rowsMap, colsMap, subGridMap
+	for i := 0; i < sG.Size; i++ {
+		for j := 0; j < sG.Size; j++ {
+			sG.Set(i, j, sG.Grid[i][j])
+		}
+	}
 }
 
 // Reset sets all the cells of the SudokuGrid to EMPTY_CELL value
@@ -111,7 +121,7 @@ func (sG *SudokuGrid) solve(cells []coord) bool {
 
 // isValidIndex returns true if the coordinates (x, y) represent a valid cell, and false otherwise
 func (sG *SudokuGrid) isValidIndex(x, y int) bool {
-	return x >= 0 || x < sG.Size || y >= 0 || y < sG.Size
+	return x >= 0 && x < sG.Size && y >= 0 && y < sG.Size
 }
 
 // Get returns the value of the cell with coordinates (x, y)
@@ -158,6 +168,9 @@ func (sG *SudokuGrid) updateCount(x, y int, newValue rune) {
 
 // canSet returns true if the given value doesn't exist in the same row (x), column (y), or subgrid
 func (sG *SudokuGrid) canSet(x, y int, val rune) bool {
+	if !sG.isValidIndex(x, y) {
+		return false
+	}
 	return !(sG.rowsMap[x][val] || sG.colsMap[y][val] || sG.subGridMap[sG.GetSubgridIndex(x, y)][val])
 }
 
@@ -173,6 +186,7 @@ func (sG *SudokuGrid) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*sG = SudokuGrid(tmpStruct)
+	sG.initMetadata()
 	return nil
 }
 
@@ -188,8 +202,9 @@ func (sG *SudokuGrid) ToStringPrettify() string {
 			if j > 0 && j%sG.PartitionWidth == 0 {
 				fmt.Fprintf(&res, "|")
 			}
-			fmt.Fprintf(&res, "%2c \n", sG.Grid[i][j])
+			fmt.Fprintf(&res, "%2c ", sG.Grid[i][j])
 		}
+		fmt.Fprintf(&res, "\n")
 	}
 	return res.String()
 }
