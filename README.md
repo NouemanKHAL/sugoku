@@ -13,7 +13,7 @@ To run the server:
 - run `go build` in the root folder.
 - start the server 
 ```console
-./sudoku-solver-rest-api`
+./sudoku-solver-rest-api
 ```
 
 This will launch a server that listens on the default port `7007`, if you wish to use a different port number, make use of the environment variable `SUDOKU_SERVER_PORT`, e.g.:
