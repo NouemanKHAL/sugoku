@@ -16,10 +16,12 @@ To run the server:
 ./sudoku-solver-rest-api
 ```
 
-This will launch a server that listens on the default port `7007`, if you wish to use a different port number, make sure to pass the environment variable `SUDOKU_SERVER_PORT`, e.g.:
+This will launch a server that listens on the default port `7007`. 
+
+If you wish to use a different port number, make sure to pass the environment variable `SUDOKU_SERVER_PORT` as follows:
 
 ```console
-SUDOKU_SERVER_PORT=7500 ./sudoku-solver-rest-api
+SUDOKU_SERVER_PORT=7331 ./sudoku-solver-rest-api
 ```
 
 ### Example: Solve a 4x4 sudoku grid with 2x2 subgrids
