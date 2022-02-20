@@ -17,16 +17,7 @@ var (
 )
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Welcome to the Sudoki REST API v0.0.1"))
-}
-
-func SudokuGeneratorHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: implement a sudoku generator
-	params := r.URL.Query()
-	size := params.Get("size")
-	partitionHeight := params.Get("partitionHeight")
-	partitionWidth := params.Get("partitionWidth")
-	w.Write([]byte("generator under construction\nreceived " + fmt.Sprintf("size:%s,pHeight:%s,pWidth:%s", size, partitionHeight, partitionWidth)))
+	w.Write([]byte("Welcome to the Sudoku Solver REST API v0.0.1"))
 }
 
 func SudokuSolverHandler(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +54,6 @@ func SudokuSolverHandler(w http.ResponseWriter, r *http.Request) {
 
 func SetupHandlers(r *mux.Router) {
 	r.HandleFunc("/", HomeHandler).Methods("GET")
-	r.HandleFunc("/sudoku", SudokuGeneratorHandler).Methods("GET")
 	r.HandleFunc("/sudoku", SudokuSolverHandler).Methods("POST")
 }
 
