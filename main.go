@@ -63,7 +63,7 @@ func StartServer() {
 
 	port := GetEnvWithDefault("SUDOKU_SERVER_PORT", DEFAULT_PORT)
 
-	log.Printf("Starting server under localhost:%s\n", port)
+	log.Printf("Server listening on port %s\n", port)
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), r)
 	if err != nil {
 		log.Fatalf("Error starting server: %s", err)
