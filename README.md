@@ -1,6 +1,6 @@
 # Sudoku Solver REST API
 
-A simple sudoku solver REST API that handles sudoku grids with custom grid size and subgrid size.
+A simple sudoku solver REST API that handles sudoku grids with custom grid and subgrid sizes.
 
 ## Prerequisites
 
