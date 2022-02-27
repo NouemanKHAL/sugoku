@@ -27,27 +27,33 @@ func SudokuSolverHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.Write([]byte(fmt.Sprintf("error reading the body: %v", err)))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	sG := sudoku.SudokuGrid{}
 	err = json.Unmarshal(body, &sG)
 	if err != nil {
-		w.Write([]byte(fmt.Sprintf("error unmarshaling the response: %v", err)))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	err = sG.Solve()
 	if err != nil {
-		w.Write([]byte(fmt.Sprintf("error solving the sudoku grid: %v", err)))
+		w.Write([]byte(fmt.Sprintf("error solving the sudoku puzzle: %v", err)))
+		return
 	}
 
 	var res []byte
 
 	if pretty == "true" {
+		w.Header().Set("Content-Type", "plain/text")
 		res = []byte(sG.ToStringPrettify())
 	} else {
+		w.Header().Set("Content-Type", "application/json")
 		res, err = json.Marshal(sG)
 		if err != nil {
-			w.Write([]byte(fmt.Sprintf("error marshalling the solution: %v", err)))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 	w.Write(res)
