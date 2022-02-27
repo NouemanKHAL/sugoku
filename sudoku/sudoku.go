@@ -42,7 +42,7 @@ func New(size, partitionWidth, partitionHeight int) (*SudokuGrid, error) {
 
 	for i := 0; i < sG.Size; i++ {
 		sG.Grid[i] = make([]rune, sG.Size)
-		for j := 0; j < sG.Size; j++ {
+		for j := 0; j < len(sG.Grid[i]); j++ {
 			sG.Grid[i][j] = EMPTY_CELL
 		}
 	}
@@ -63,7 +63,7 @@ func (sG *SudokuGrid) initMetadata() {
 
 	// update the state of rowsMap, colsMap, subGridMap
 	for i := 0; i < sG.Size; i++ {
-		for j := 0; j < sG.Size; j++ {
+		for j := 0; j < len(sG.Grid[i]); j++ {
 			sG.Set(i, j, sG.Grid[i][j])
 		}
 	}
@@ -79,7 +79,7 @@ func (sG *SudokuGrid) Solve() error {
 	missingCells := make([]coord, 0, sG.Size*sG.Size)
 
 	for i := 0; i < sG.Size; i++ {
-		for j := 0; j < sG.Size; j++ {
+		for j := 0; j < len(sG.Grid[i]); j++ {
 			if sG.Grid[i][j] == EMPTY_CELL {
 				missingCells = append(missingCells, coord{x: i, y: j})
 			}
@@ -198,7 +198,7 @@ func (sG *SudokuGrid) ToStringPrettify() string {
 		if i > 0 && i%sG.PartitionHeight == 0 {
 			fmt.Fprintf(&res, "%s\n", strings.Repeat("-", sG.Size*3+2))
 		}
-		for j := 0; j < sG.Size; j++ {
+		for j := 0; j < len(sG.Grid[i]); j++ {
 			if j > 0 && j%sG.PartitionWidth == 0 {
 				fmt.Fprintf(&res, "|")
 			}
