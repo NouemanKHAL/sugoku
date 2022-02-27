@@ -74,7 +74,7 @@ curl -X POST http://localhost:7007/sudoku?pretty=true -d {\"Size\":4,\"Partition
 
 - Add more unit tests
 - Improve errors handling in the route handlers
-- Add request logging and validation middlewares
+- ~~Improve request logging~~
 - Add a Sudoku puzzle generator endpoint
 - Add authentication?
 - Support HTTPS?
