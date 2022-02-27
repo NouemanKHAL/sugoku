@@ -37,8 +37,13 @@ func SudokuSolverHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = sG.Solve()
-	if err != nil {
+
+	if err = sG.Valid(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err = sG.Solve(); err != nil {
 		w.Write([]byte(fmt.Sprintf("error solving the sudoku puzzle: %v", err)))
 		return
 	}

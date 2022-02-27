@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/hashicorp/go-multierror"
 )
 
 const (
@@ -28,10 +30,6 @@ type coord struct {
 
 // New Returns an empty sG.Size x sG.Size SudokuGrid
 func New(size, partitionWidth, partitionHeight int) (*SudokuGrid, error) {
-	if size%partitionHeight != 0 || size%partitionWidth != 0 || size%(partitionHeight*partitionWidth) != 0 {
-		return nil, errors.New("Size must be divisible by both Width and Height.")
-	}
-
 	sG := SudokuGrid{
 		Size:            size,
 		PartitionWidth:  partitionWidth,
@@ -47,6 +45,10 @@ func New(size, partitionWidth, partitionHeight int) (*SudokuGrid, error) {
 		}
 	}
 	sG.initMetadata()
+
+	if err := sG.Valid(); err != nil {
+		return nil, err
+	}
 	return &sG, nil
 }
 
@@ -207,4 +209,29 @@ func (sG *SudokuGrid) ToStringPrettify() string {
 		fmt.Fprintf(&res, "\n")
 	}
 	return res.String()
+}
+
+// Valid returns all the errors if the SudokuGrid isn't valid, nil otherwise
+func (sG *SudokuGrid) Valid() error {
+	var result error
+
+	if sG.Size%sG.PartitionHeight != 0 || sG.Size%sG.PartitionWidth != 0 || sG.Size%(sG.PartitionHeight*sG.PartitionWidth) != 0 {
+		result = multierror.Append(result, errors.New("size must be divisible by both partition width and partition height"))
+	}
+
+	if len(sG.Grid) != sG.Size {
+		result = multierror.Append(result, errors.New("grid size does not match the size attribute"))
+	}
+
+	cnt := 0
+	for i := 0; i < sG.Size; i++ {
+		if len(sG.Grid[i]) != sG.Size {
+			cnt++
+		}
+	}
+	if cnt > 0 {
+		result = multierror.Append(result, fmt.Errorf("size of %d row(s) does not match the size attribute", cnt))
+	}
+
+	return result
 }
