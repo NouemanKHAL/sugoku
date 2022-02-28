@@ -7,21 +7,19 @@ A simple sudoku REST API that allows to solve and generate sudoku grids with cus
 - Go 1.16 or later. [See the install instructions for Go](https://go.dev/doc/install).
 
 ## Usage
-
-To run the server:
-
-- run `go build` in the root folder.
-- start the server by running the generated binary.
 ```console
-./sugoku
-```
+Usage:
+  sugoku [command]
 
-This will launch a server that listens on the default port `7007`. 
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  start       Start a sudoku server
 
-If you wish to use a different port number, make sure to pass the environment variable `SUDOKU_SERVER_PORT` as follows:
+Flags:
+  -h, --help   help for sugoku
 
-```console
-SUDOKU_SERVER_PORT=7331 ./sugoku
+Use "sugoku [command] --help" for more information about a command.
 ```
 
 ### Example: Solve a 4x4 sudoku grid with 2x2 subgrids

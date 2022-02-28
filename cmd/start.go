@@ -40,6 +40,5 @@ func init() {
 
 	startCmd.Flags().StringVarP(&logLevel, "log-level", "l", "INFO", "Logging level")
 	viper.BindPFlag("log-level", startCmd.Flags().Lookup("log-level"))
-
 	// TODO: add support for log file
 }
