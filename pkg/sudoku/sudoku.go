@@ -44,11 +44,11 @@ func New(size, partitionWidth, partitionHeight int) (*SudokuGrid, error) {
 			sG.Grid[i][j] = EMPTY_CELL
 		}
 	}
-	sG.initMetadata()
-
 	if err := sG.Valid(); err != nil {
 		return nil, err
 	}
+
+	sG.initMetadata()
 	return &sG, nil
 }
 
