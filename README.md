@@ -1,6 +1,6 @@
-# Sudoku Solver REST API
+# Sugoku
 
-A simple sudoku solver REST API that handles sudoku grids with custom grid and subgrid sizes.
+A simple sudoku REST API that allows to solve and generate sudoku grids with custom grid and subgrid sizes.
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ To run the server:
 - run `go build` in the root folder.
 - start the server by running the generated binary.
 ```console
-./sudoku-solver-rest-api
+./sugoku
 ```
 
 This will launch a server that listens on the default port `7007`. 
@@ -21,7 +21,7 @@ This will launch a server that listens on the default port `7007`.
 If you wish to use a different port number, make sure to pass the environment variable `SUDOKU_SERVER_PORT` as follows:
 
 ```console
-SUDOKU_SERVER_PORT=7331 ./sudoku-solver-rest-api
+SUDOKU_SERVER_PORT=7331 ./sugoku
 ```
 
 ### Example: Solve a 4x4 sudoku grid with 2x2 subgrids
