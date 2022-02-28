@@ -38,7 +38,7 @@ func init() {
 	startCmd.Flags().IntVarP(&port, "port", "p", 7007, "The port number used by the server")
 	viper.BindPFlag("port", startCmd.Flags().Lookup("port"))
 
-	startCmd.Flags().StringVarP(&logLevel, "log-level", "ll", "INFO", "Logging level")
+	startCmd.Flags().StringVarP(&logLevel, "log-level", "l", "INFO", "Logging level")
 	viper.BindPFlag("log-level", startCmd.Flags().Lookup("log-level"))
 
 	// TODO: add support for log file
