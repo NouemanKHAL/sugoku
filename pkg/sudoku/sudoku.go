@@ -114,7 +114,7 @@ func (sG *SudokuGrid) solve(cells []coord) bool {
 				return true
 			}
 
-			/// it didnt work, reset the old value
+			// it didnt work, reset the old value
 			sG.Set(x, y, oldValue)
 		}
 	}
@@ -234,4 +234,49 @@ func (sG *SudokuGrid) Valid() error {
 	}
 
 	return result
+}
+
+// GenerateSudokuGrid returns a SudokuGrid with the given dimensions
+func GenerateSudokuGrid(size, partitionWidth, partitionHeight int) (*SudokuGrid, error) {
+	sG, err := New(size, partitionWidth, partitionHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	if generateSudokuGrid(sG, 0, 0) {
+		return sG, nil
+	}
+
+	return nil, errors.New("could not generate a valid sudoku grid")
+}
+
+func generateSudokuGrid(sG *SudokuGrid, i, j int) bool {
+	// surpasses the last row or last cell (sG.Size - 1, sG.Size - 1)
+	if i >= sG.Size {
+		return true
+	}
+
+	for val := '1'; val <= rune('0'+sG.Size); val++ {
+		if sG.canSet(i, j, val) {
+			// try this value
+			sG.Set(i, j, val)
+
+			// determine our next cell
+			newI, newJ := i, j+1
+			if j+1 >= sG.Size {
+				newI = i + 1
+				newJ = 0
+			}
+
+			// continue backtracking on the next cell
+			if generateSudokuGrid(sG, newI, newJ) {
+				return true
+			}
+
+			// it didnt work, reset the old value
+			sG.Set(i, j, EMPTY_CELL)
+		}
+	}
+
+	return false
 }

@@ -36,6 +36,42 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Welcome to the Sudoku REST API v0.0.1"))
 }
 
+/*
+TODO: randomly remove cell values according to a given difficulty parameter:
+	easy => remove 50%
+	medium => remove 65%
+	hard => remove 80%
+	extreme => remove 95%
+	robot => remove 100%
+*/
+func SudokuGeneratorHandler(w http.ResponseWriter, r *http.Request) {
+	params := r.URL.Query()
+	pretty := params.Get("pretty")
+	size, _ := strconv.Atoi(params.Get("size"))
+	partitionWidth, _ := strconv.Atoi(params.Get("partitionWidth"))
+	partitionHeight, _ := strconv.Atoi(params.Get("partitionHeight"))
+
+	sG, err := sudoku.GenerateSudokuGrid(size, partitionWidth, partitionHeight)
+	if err != nil {
+    http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var res []byte
+
+	if pretty == "true" {
+		res = []byte(sG.ToStringPrettify())
+	} else {
+		res, err = json.Marshal(sG)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	w.Write(res)
+}
+
 func sudokuSolverHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	pretty := params.Get("pretty")
@@ -86,6 +122,7 @@ func SetupHandlers(r *mux.Router) {
 	// TODO: add support for authentication => privateMiddleware
 	r.HandleFunc("/", middleware.Chain(homeHandler, publicMiddleware...)).Methods("GET")
 	r.HandleFunc("/sudoku", middleware.Chain(sudokuSolverHandler, publicMiddleware...)).Methods("POST")
+  r.HandleFunc("/sudoku", middleware.Chain(sudokuSolverHandler, publicMiddleware...)).Methods("GET")
 }
 
 func StartServer(cfg config.Config) {
