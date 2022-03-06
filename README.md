@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/25211181/156906917-fab62386-0f7b-4d8a-b004-6d8c6a2ebc1d.png" width="900"> 
+  <img src="https://user-images.githubusercontent.com/25211181/156906917-fab62386-0f7b-4d8a-b004-6d8c6a2ebc1d.png"> 
 </p>
 
 A simple Sudoku REST API (written in Go) designed to solve and generate Sudoku puzzles with customizable grid dimensions as well as subgrid dimensions.
