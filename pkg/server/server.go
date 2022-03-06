@@ -40,7 +40,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 /*
 TODO:Generator will product same output for the same input... we need to randomize it
 */
-func SudokuGeneratorHandler(w http.ResponseWriter, r *http.Request) {
+func sudokuGeneratorHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	pretty := params.Get("pretty")
 	level := params.Get("level")
@@ -50,12 +50,14 @@ func SudokuGeneratorHandler(w http.ResponseWriter, r *http.Request) {
 
 	sG, err := sudoku.GenerateSudokuGrid(size, partitionWidth, partitionHeight)
 	if err != nil {
+		log.Debugf("sudoku GenerateSudokuGrid failed: %w", err) 
     		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err = sG.SetGridToLevel(level)
 	if err != nil {
+		log.Debugf("sudoku SetGridToLevel failed: %w", err) 
     		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -125,7 +127,7 @@ func SetupHandlers(r *mux.Router) {
 	// TODO: add support for authentication => privateMiddleware
 	r.HandleFunc("/", middleware.Chain(homeHandler, publicMiddleware...)).Methods("GET")
 	r.HandleFunc("/sudoku", middleware.Chain(sudokuSolverHandler, publicMiddleware...)).Methods("POST")
-	r.HandleFunc("/sudoku", middleware.Chain(sudokuSolverHandler, publicMiddleware...)).Methods("GET")
+	r.HandleFunc("/sudoku", middleware.Chain(sudokuGeneratorHandler, publicMiddleware...)).Methods("GET")
 }
 
 func StartServer(cfg config.Config) {
