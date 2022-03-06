@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-  "strconv"
+	"strconv"
 
 	"github.com/NouemanKHAL/sugoku/pkg/config"
 	"github.com/NouemanKHAL/sugoku/pkg/middleware"
@@ -123,7 +123,7 @@ func SetupHandlers(r *mux.Router) {
 	// TODO: add support for authentication => privateMiddleware
 	r.HandleFunc("/", middleware.Chain(homeHandler, publicMiddleware...)).Methods("GET")
 	r.HandleFunc("/sudoku", middleware.Chain(sudokuSolverHandler, publicMiddleware...)).Methods("POST")
-  r.HandleFunc("/sudoku", middleware.Chain(sudokuSolverHandler, publicMiddleware...)).Methods("GET")
+	r.HandleFunc("/sudoku", middleware.Chain(sudokuSolverHandler, publicMiddleware...)).Methods("GET")
 }
 
 func StartServer(cfg config.Config) {
