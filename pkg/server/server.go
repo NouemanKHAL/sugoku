@@ -33,7 +33,7 @@ func initLogger(cfg config.Config) {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Welcome to the Sudoku Solver REST API v0.0.1"))
+	w.Write([]byte("Welcome to the Sudoku REST API v0.0.1"))
 }
 
 func sudokuSolverHandler(w http.ResponseWriter, r *http.Request) {
@@ -89,10 +89,10 @@ func SetupHandlers(r *mux.Router) {
 }
 
 func StartServer(cfg config.Config) {
-	initLogger(cfg)
-
 	r := mux.NewRouter()
 	SetupHandlers(r)
+
+	initLogger(cfg)
 
 	log.Printf("Server listening on port %d", cfg.Port)
 	err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)

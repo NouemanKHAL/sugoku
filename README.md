@@ -1,6 +1,6 @@
 # Sugoku
 
-A simple sudoku REST API that allows to solve and generate sudoku grids with custom grid and subgrid sizes.
+A simple sudoku REST API written in Go that allows to solve and generate sudoku grids with custom grid and subgrid sizes.
 
 ## Prerequisites
 

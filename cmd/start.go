@@ -16,7 +16,6 @@ var (
 	logLevel string
 )
 
-// startCmd represents the start command
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start a sudoku server",
