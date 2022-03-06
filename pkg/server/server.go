@@ -38,23 +38,25 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
-TODO: randomly remove cell values according to a given difficulty parameter:
-	easy => remove 50%
-	medium => remove 65%
-	hard => remove 80%
-	extreme => remove 95%
-	robot => remove 100%
+TODO:Generator will product same output for the same input... we need to randomize it
 */
 func SudokuGeneratorHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	pretty := params.Get("pretty")
+	level := params.Get("level")
 	size, _ := strconv.Atoi(params.Get("size"))
 	partitionWidth, _ := strconv.Atoi(params.Get("partitionWidth"))
 	partitionHeight, _ := strconv.Atoi(params.Get("partitionHeight"))
 
 	sG, err := sudoku.GenerateSudokuGrid(size, partitionWidth, partitionHeight)
 	if err != nil {
-    http.Error(w, err.Error(), http.StatusBadRequest)
+    		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = sG.SetGridToLevel(level)
+	if err != nil {
+    		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"math/rand"
 
 	"github.com/hashicorp/go-multierror"
 )
@@ -192,50 +193,6 @@ func (sG *SudokuGrid) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// ToStringPrettify returns a formatted string representation of the SudokuGrid
-func (sG *SudokuGrid) ToStringPrettify() string {
-	var res strings.Builder
-	res.Grow(sG.Size * (2*sG.Size + 1))
-	for i := 0; i < sG.Size; i++ {
-		if i > 0 && i%sG.PartitionHeight == 0 {
-			fmt.Fprintf(&res, "%s\n", strings.Repeat("-", sG.Size*3+2))
-		}
-		for j := 0; j < len(sG.Grid[i]); j++ {
-			if j > 0 && j%sG.PartitionWidth == 0 {
-				fmt.Fprintf(&res, "|")
-			}
-			fmt.Fprintf(&res, "%2c ", sG.Grid[i][j])
-		}
-		fmt.Fprintf(&res, "\n")
-	}
-	return res.String()
-}
-
-// Valid returns all the errors if the SudokuGrid isn't valid, nil otherwise
-func (sG *SudokuGrid) Valid() error {
-	var result error
-
-	if sG.Size%sG.PartitionHeight != 0 || sG.Size%sG.PartitionWidth != 0 || sG.Size%(sG.PartitionHeight*sG.PartitionWidth) != 0 {
-		result = multierror.Append(result, errors.New("size must be divisible by both partition width and partition height"))
-	}
-
-	if len(sG.Grid) != sG.Size {
-		result = multierror.Append(result, errors.New("grid size does not match the size attribute"))
-	}
-
-	cnt := 0
-	for i := 0; i < sG.Size; i++ {
-		if len(sG.Grid[i]) != sG.Size {
-			cnt++
-		}
-	}
-	if cnt > 0 {
-		result = multierror.Append(result, fmt.Errorf("size of %d row(s) does not match the size attribute", cnt))
-	}
-
-	return result
-}
-
 // GenerateSudokuGrid returns a SudokuGrid with the given dimensions
 func GenerateSudokuGrid(size, partitionWidth, partitionHeight int) (*SudokuGrid, error) {
 	sG, err := New(size, partitionWidth, partitionHeight)
@@ -279,4 +236,80 @@ func generateSudokuGrid(sG *SudokuGrid, i, j int) bool {
 	}
 
 	return false
+}
+
+func levelToThreshold(level string) (float64, error) {
+	switch(level) {
+	case "easy":
+		return 0.5, nil
+	case "medium":
+		return 0.65, nil
+	case "hard":
+		return 0.8, nil
+	case "extreme":
+		return 0.95, nil
+	case "robot":
+		return 1, nil
+	}
+	return 0, errors.New("invalid level must be one of the supported levels: easy, medium, hard, extreme, robot")
+}
+
+// SetGridTolevel adds empty cells to match the desired difficulty level
+func (sG *SudokuGrid) SetGridToLevel(level string) error {
+	threshold, err := levelToThreshold(level)
+	if err != nil {
+		return err
+	}
+	for i := 0 ; i < sG.Size ; i++ {
+		for j := 0 ; j < len(sG.Grid[i]) ; j++ {
+			if rand.Float64() < threshold {
+				sG.Set(i, j, EMPTY_CELL)
+			}
+		}
+	}
+	return nil
+}
+
+// ToStringPrettify returns a formatted string representation of the SudokuGrid
+func (sG *SudokuGrid) ToStringPrettify() string {
+	var res strings.Builder
+	res.Grow(sG.Size * (2*sG.Size + 1))
+	for i := 0; i < sG.Size; i++ {
+		if i > 0 && i%sG.PartitionHeight == 0 {
+			fmt.Fprintf(&res, "%s\n", strings.Repeat("-", sG.Size*3+2))
+		}
+		for j := 0; j < len(sG.Grid[i]); j++ {
+			if j > 0 && j%sG.PartitionWidth == 0 {
+				fmt.Fprintf(&res, "|")
+			}
+			fmt.Fprintf(&res, "%2c ", sG.Grid[i][j])
+		}
+		fmt.Fprintf(&res, "\n")
+	}
+	return res.String()
+}
+
+// Valid returns all the errors if the SudokuGrid isn't valid, nil otherwise
+func (sG *SudokuGrid) Valid() error {
+	var result error
+
+	if sG.Size%sG.PartitionHeight != 0 || sG.Size%sG.PartitionWidth != 0 || sG.Size%(sG.PartitionHeight*sG.PartitionWidth) != 0 {
+		result = multierror.Append(result, errors.New("size must be divisible by both partition width and partition height"))
+	}
+
+	if len(sG.Grid) != sG.Size {
+		result = multierror.Append(result, errors.New("grid size does not match the size attribute"))
+	}
+
+	cnt := 0
+	for i := 0; i < sG.Size; i++ {
+		if len(sG.Grid[i]) != sG.Size {
+			cnt++
+		}
+	}
+	if cnt > 0 {
+		result = multierror.Append(result, fmt.Errorf("size of %d row(s) does not match the size attribute", cnt))
+	}
+
+	return result
 }
