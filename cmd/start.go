@@ -21,7 +21,7 @@ var startCmd = &cobra.Command{
 	Short: "Start a sudoku server",
 	Long: `
 	Start a sudoku server listening on the given port (-p) or 7007 by default.
-	Logging levels can be controlled with the (-l) flag. 
+	Logging levels can be controlled using the (-l) flag. 
 	List of supported logging levels (TRACE, DEBUG, INFO, WARN, ERROR).`,
 	Run: func(cmd *cobra.Command, args []string) {
 		configuration := config.Config{
