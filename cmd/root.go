@@ -12,7 +12,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "sugoku",
-	Short: "Sugoku is a sudoku REST API written in Go that allows to solve and generate sudoku grids with custom grid and subgrid sizes",
+	Short: "Sugoku is a simple Sudoku REST API (written in Go) designed to solve and generate Sudoku puzzles with customizable grid dimensions as well as subgrid dimensions",
 }
 
 func Execute() {
