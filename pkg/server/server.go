@@ -13,9 +13,12 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	easy "github.com/t-tomalak/logrus-easy-formatter"
+
+	"github.com/hashicorp/go-multierror"
 )
 
 func initLogger(cfg config.Config) {
+	log.SetReportCaller(true)
 	log.SetFormatter(&easy.Formatter{
 		TimestampFormat: "2006-01-02 15:04:05",
 		LogFormat:       "%time% - [%lvl%] - %msg%\n",
@@ -31,6 +34,7 @@ func initLogger(cfg config.Config) {
 	case "ERROR":
 		log.SetLevel(log.ErrorLevel)
 	}
+
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -44,21 +48,37 @@ func sudokuGeneratorHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	pretty := params.Get("pretty")
 	level := params.Get("level")
-	size, _ := strconv.Atoi(params.Get("size"))
-	partitionWidth, _ := strconv.Atoi(params.Get("partitionWidth"))
-	partitionHeight, _ := strconv.Atoi(params.Get("partitionHeight"))
+
+	var result error
+	size, err := strconv.Atoi(params.Get("size"))
+	if err != nil {
+		result = multierror.Append(result, err)
+	}
+	partitionWidth, err := strconv.Atoi(params.Get("partitionWidth"))
+	if err != nil {
+		result = multierror.Append(result, err)
+	}
+	partitionHeight, err := strconv.Atoi(params.Get("partitionHeight"))
+	if err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	if result != nil {
+		log.Errorf("error validating request params: %v", result)
+		http.Error(w, result.Error(), http.StatusBadRequest)
+	}
 
 	sG, err := sudoku.GenerateSudokuGrid(size, partitionWidth, partitionHeight)
 	if err != nil {
-		log.Debugf("sudoku GenerateSudokuGrid failed: %w", err) 
-    		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Errorf("error generating sudoku grid: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err = sG.SetGridToLevel(level)
 	if err != nil {
-		log.Debugf("sudoku SetGridToLevel failed: %w", err) 
-    		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Errorf("error setting the grid to the difficulty level: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -69,6 +89,7 @@ func sudokuGeneratorHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		res, err = json.Marshal(sG)
 		if err != nil {
+			log.Errorf("error marshalling the response: %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -83,6 +104,7 @@ func sudokuSolverHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.Errorf("error reading the body: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -90,16 +112,26 @@ func sudokuSolverHandler(w http.ResponseWriter, r *http.Request) {
 	sG := sudoku.SudokuGrid{}
 	err = json.Unmarshal(body, &sG)
 	if err != nil {
+		log.Errorf("error unmarshalling the body: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	b, err := json.Marshal(sG)
+	if err != nil {
+		log.Warnf("error marshalling body: %s", string(b))
+	}
+
+	log.Debugf("body: %v", string(b))
+
 	if err = sG.Valid(); err != nil {
+		log.Errorf("error validating the sudoku grid: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if err = sG.Solve(); err != nil {
+		log.Errorf("error solving the sudoku puzzle: %v", err)
 		w.Write([]byte(fmt.Sprintf("error solving the sudoku puzzle: %v", err)))
 		return
 	}
@@ -113,6 +145,7 @@ func sudokuSolverHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		res, err = json.Marshal(sG)
 		if err != nil {
+			log.Errorf("error marshalling the response: %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"math/rand"
-
-	"github.com/hashicorp/go-multierror"
+	"strings"
 )
 
 const (
@@ -189,6 +187,10 @@ func (sG *SudokuGrid) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*sG = SudokuGrid(tmpStruct)
+	err = sG.Valid()
+	if err != nil {
+		return err
+	}
 	sG.initMetadata()
 	return nil
 }
@@ -239,7 +241,7 @@ func generateSudokuGrid(sG *SudokuGrid, i, j int) bool {
 }
 
 func levelToThreshold(level string) (float64, error) {
-	switch(level) {
+	switch level {
 	case "easy":
 		return 0.5, nil
 	case "medium":
@@ -260,8 +262,8 @@ func (sG *SudokuGrid) SetGridToLevel(level string) error {
 	if err != nil {
 		return err
 	}
-	for i := 0 ; i < sG.Size ; i++ {
-		for j := 0 ; j < len(sG.Grid[i]) ; j++ {
+	for i := 0; i < sG.Size; i++ {
+		for j := 0; j < len(sG.Grid[i]); j++ {
 			if rand.Float64() < threshold {
 				sG.Set(i, j, EMPTY_CELL)
 			}
@@ -291,25 +293,22 @@ func (sG *SudokuGrid) ToStringPrettify() string {
 
 // Valid returns all the errors if the SudokuGrid isn't valid, nil otherwise
 func (sG *SudokuGrid) Valid() error {
-	var result error
-
 	if sG.Size%sG.PartitionHeight != 0 || sG.Size%sG.PartitionWidth != 0 || sG.Size%(sG.PartitionHeight*sG.PartitionWidth) != 0 {
-		result = multierror.Append(result, errors.New("size must be divisible by both partition width and partition height"))
+		return errors.New("Size must be divisible by both partition width and partition height")
 	}
-
 	if len(sG.Grid) != sG.Size {
-		result = multierror.Append(result, errors.New("grid size does not match the size attribute"))
+		return errors.New("Grid size does not match the given size attribute")
 	}
 
 	cnt := 0
-	for i := 0; i < sG.Size; i++ {
+	for i := 0; i < len(sG.Grid); i++ {
 		if len(sG.Grid[i]) != sG.Size {
 			cnt++
 		}
 	}
 	if cnt > 0 {
-		result = multierror.Append(result, fmt.Errorf("size of %d row(s) does not match the size attribute", cnt))
+		return fmt.Errorf("%d row(s) sizes do not match the given size attribute", cnt)
 	}
 
-	return result
+	return nil
 }
