@@ -39,7 +39,7 @@ var _ = Describe("Sudoku", func() {
 
 			sudokuGridBytes, err := json.Marshal(sG1)
 			Expect(err).To(BeNil())
-			Expect(string(sudokuGridBytes)).To(Equal(`{"Size":9,"PartitionWidth":3,"PartitionHeight":3,"Grid":[[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46]]}`))
+			Expect(string(sudokuGridBytes)).To(Equal(`{"size":9,"partitionWidth":3,"partitionHeight":3,"grid":[[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46],[46,46,46,46,46,46,46,46,46]]}`))
 
 			sG2 := &SudokuGrid{}
 			err = json.Unmarshal(sudokuGridBytes, sG2)
@@ -85,16 +85,16 @@ var _ = Describe("Sudoku", func() {
 
 		Context("isValidIndex method", func() {
 			It("isValidIndex returns true if the given coordinates are not out of range", func() {
-				Expect(sG.isValidIndex(0, 0)).To(BeTrue())
-				Expect(sG.isValidIndex(sG.Size-1, 0)).To(BeTrue())
-				Expect(sG.isValidIndex(0, sG.Size-1)).To(BeTrue())
+				Expect(sG.isValidIndex(0, 0)).To(BeNil())
+				Expect(sG.isValidIndex(sG.Size-1, 0)).To(BeNil())
+				Expect(sG.isValidIndex(0, sG.Size-1)).To(BeNil())
 			})
 
 			It("isValidIndex returns false if the given coordinates are out of range", func() {
-				Expect(sG.isValidIndex(-1, 0)).To(BeFalse())
-				Expect(sG.isValidIndex(0, -1)).To(BeFalse())
-				Expect(sG.isValidIndex(sG.Size, 0)).To(BeFalse())
-				Expect(sG.isValidIndex(0, sG.Size)).To(BeFalse())
+				Expect(sG.isValidIndex(-1, 0)).NotTo(BeNil())
+				Expect(sG.isValidIndex(0, -1)).NotTo(BeNil())
+				Expect(sG.isValidIndex(sG.Size, 0)).NotTo(BeNil())
+				Expect(sG.isValidIndex(0, sG.Size)).NotTo(BeNil())
 			})
 		})
 

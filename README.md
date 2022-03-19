@@ -44,7 +44,7 @@ In order to solve a sudoku puzzle:
 1. Send a POST request to `/sudoku` with the puzzle in `json` format in the body, and optionally you may set the query parameter `pretty=true` for a human readable output.
 
 ```console
-curl -X POST http://localhost:7007/sudoku?pretty=true -d '{"Size":4,"PartitionWidth":2,"PartitionHeight":2,"Grid":[[49,46,46,52],[46,46,49,46],[50,46,46,46],[52,46,50,46]]}'
+curl -X POST http://localhost:7007/sudoku?pretty=true -d '{"size":4,"partitionWidth":2,"partitionHeight":2,"grid":[[49,46,46,52],[46,46,49,46],[50,46,46,46],[52,46,50,46]]}'
 ```
 
 2. Server responds with a valid solution:

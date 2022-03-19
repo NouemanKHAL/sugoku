@@ -17,10 +17,10 @@ const (
 )
 
 type SudokuGrid struct {
-	Size            int      `json:"Size"`
-	PartitionWidth  int      `json:"PartitionWidth"`
-	PartitionHeight int      `json:"PartitionHeight"`
-	Grid            [][]rune `json:"Grid"`
+	Size            int      `json:"size"`
+	PartitionWidth  int      `json:"partitionWidth"`
+	PartitionHeight int      `json:"partitionHeight"`
+	Grid            [][]rune `json:"grid"`
 	rowsMap         []map[rune]bool
 	colsMap         []map[rune]bool
 	subGridMap      []map[rune]bool
@@ -103,7 +103,7 @@ func (sG *SudokuGrid) Solve() error {
 	}
 
 	if !sG.solve(missingCells) {
-		return errors.New("No solution exists")
+		return errors.New("no solution exists")
 	}
 	return nil
 }
@@ -136,22 +136,25 @@ func (sG *SudokuGrid) solve(cells []coord) bool {
 }
 
 // isValidIndex returns true if the coordinates (x, y) represent a valid cell, and false otherwise
-func (sG *SudokuGrid) isValidIndex(x, y int) bool {
-	return x >= 0 && x < sG.Size && y >= 0 && y < sG.Size
+func (sG *SudokuGrid) isValidIndex(x, y int) error {
+	if x < 0 || x >= sG.Size || y < 0 || y >= sG.Size {
+		return fmt.Errorf("cell coordinates out of bounds (%d, %d)", x, y)
+	}
+	return nil
 }
 
 // Get returns the value of the cell with coordinates (x, y)
 func (sG *SudokuGrid) Get(x, y int) (rune, error) {
-	if !sG.isValidIndex(x, y) {
-		return EMPTY_CELL, errors.New(fmt.Sprintf("Cell coordinates out of bounds. (%d, %d)", x, y))
+	if err := sG.isValidIndex(x, y); err != nil {
+		return EMPTY_CELL, err
 	}
 	return sG.Grid[x][y], nil
 }
 
 // Set sets the value of the cell with coordinates (x, y)
 func (sG *SudokuGrid) Set(x, y int, val rune) error {
-	if !sG.isValidIndex(x, y) {
-		return errors.New(fmt.Sprintf("Cell coordinates out of bounds. (%d, %d)", x, y))
+	if err := sG.isValidIndex(x, y); err != nil {
+		return err
 	}
 
 	sG.updateCount(x, y, val)
@@ -184,7 +187,7 @@ func (sG *SudokuGrid) updateCount(x, y int, newValue rune) {
 
 // canSet returns true if the given value doesn't exist in the same row (x), column (y), or subgrid
 func (sG *SudokuGrid) canSet(x, y int, val rune) bool {
-	if !sG.isValidIndex(x, y) {
+	if err := sG.isValidIndex(x, y); err != nil {
 		return false
 	}
 	return !(sG.rowsMap[x][val] || sG.colsMap[y][val] || sG.subGridMap[sG.GetSubgridIndex(x, y)][val])
@@ -216,9 +219,11 @@ func GenerateSudokuGrid(size, partitionWidth, partitionHeight int) (*SudokuGrid,
 	if err != nil {
 		return nil, err
 	}
+
 	// shuffling the allowed values => random puzzle generation
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(sG.allowedValues), func(i, j int) { sG.allowedValues[i], sG.allowedValues[j] = sG.allowedValues[j], sG.allowedValues[i] })
+
 	log.Debugf("generating sudoku grid using the allowed values: %v\n", sG.allowedValues)
 
 	if generateSudokuGrid(sG, 0, 0) {
@@ -271,7 +276,7 @@ func getLevelThreshold(level string) (float64, error) {
 	case "robot":
 		return 1, nil
 	}
-	return 0, errors.New("invalid level must be one of the supported levels: easy, medium, hard, extreme, robot")
+	return 0, errors.New("invalid level: must be one of the supported levels (easy, medium, hard, extreme, robot)")
 }
 
 // SetGridTolevel adds empty cells to match the desired difficulty level
@@ -312,10 +317,10 @@ func (sG *SudokuGrid) ToStringPrettify() string {
 // Valid returns all the errors if the SudokuGrid isn't valid, nil otherwise
 func (sG *SudokuGrid) Valid() error {
 	if sG.Size%sG.PartitionHeight != 0 || sG.Size%sG.PartitionWidth != 0 || sG.Size%(sG.PartitionHeight*sG.PartitionWidth) != 0 {
-		return errors.New("Size must be divisible by both partition width and partition height")
+		return errors.New("size must be divisible by both partitionWidth and partitionHeight")
 	}
 	if len(sG.Grid) != sG.Size {
-		return errors.New("Grid size does not match the given size attribute")
+		return errors.New("the given grid size does not match the given size property")
 	}
 
 	cnt := 0
@@ -325,7 +330,7 @@ func (sG *SudokuGrid) Valid() error {
 		}
 	}
 	if cnt > 0 {
-		return fmt.Errorf("%d row(s) sizes do not match the given size attribute", cnt)
+		return fmt.Errorf("%d row(s) sizes do not match the given size property", cnt)
 	}
 
 	return nil
