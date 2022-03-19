@@ -39,31 +39,15 @@ We will use the grid below as input for the example.
  4  . | 2  .
 ```
 
-which corresponds to the following `json` payload:
+In order to solve a sudoku puzzle:
 
- ```json
- {
-    "Size": 4,
-    "PartitionWidth": 2,
-    "PartitionHeight": 2,
-    "Grid":[
-        [49,46,46,52],
-        [46,46,49,46],
-        [50,46,46,46],
-        [52,46,50,46]
-    ]
- }
-```
-
-- Send a POST request to `/sudoku` with the previous `json` payload in the body.
-
-*You may use `pretty=true` for a human readable output.*
+1. Send a POST request to `/sudoku` with the puzzle in `json` format in the body, and optionally you may set the query parameter `pretty=true` for a human readable output.
 
 ```console
 curl -X POST http://localhost:7007/sudoku?pretty=true -d '{"Size":4,"PartitionWidth":2,"PartitionHeight":2,"Grid":[[49,46,46,52],[46,46,49,46],[50,46,46,46],[52,46,50,46]]}'
 ```
 
-- Server responds with:
+2. Server responds with a valid solution:
 
 ```console
  1  2 | 3  4
@@ -73,17 +57,19 @@ curl -X POST http://localhost:7007/sudoku?pretty=true -d '{"Size":4,"PartitionWi
  4  3 | 2  1
 ```
 
-- Done!
+3. Done!
 
 ### Generate a sudoku puzzle
 
-In order to generate a hard level 9x9 sudoku puzzle, we will send the following request:
+In order to generate a 9x9 hard sudoku puzzle:
+
+1. Send a GET Request to `/sudoku` endpoint with the following query parameters `size=9`, `partitionWidth=3`, `partitionHeight=3` and optionally add `pretty=true` for a human readable output
 
 ```console
 curl 'http://localhost:7007/sudoku?pretty=true&size=9&partitionWidth=3&partitionHeight=3&level=hard'
 ```
 
-Server responds with a human readable output of the puzzle as follows:
+2. Server responds with a human readable output of the puzzle
 
 
 ```console
@@ -100,6 +86,7 @@ Server responds with a human readable output of the puzzle as follows:
  6  .  . | .  .  1 | .  .  .
 ```
 
+3. Done!
 
 ## TO DO
 
