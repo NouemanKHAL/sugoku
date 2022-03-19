@@ -240,7 +240,7 @@ func generateSudokuGrid(sG *SudokuGrid, i, j int) bool {
 	return false
 }
 
-func levelToThreshold(level string) (float64, error) {
+func getLevelThreshold(level string) (float64, error) {
 	switch level {
 	case "easy":
 		return 0.5, nil
@@ -258,7 +258,7 @@ func levelToThreshold(level string) (float64, error) {
 
 // SetGridTolevel adds empty cells to match the desired difficulty level
 func (sG *SudokuGrid) SetGridToLevel(level string) error {
-	threshold, err := levelToThreshold(level)
+	threshold, err := getLevelThreshold(level)
 	if err != nil {
 		return err
 	}
