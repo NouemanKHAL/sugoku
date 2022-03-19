@@ -25,7 +25,9 @@ Flags:
 Use "sugoku [command] --help" for more information about a command.
 ```
 
-### Example: Solve a 4x4 sudoku grid with 2x2 subgrids
+## Examples
+
+### Solve a sudoku puzzle
 
 We will use the grid below as input for the example.
 
@@ -55,7 +57,7 @@ which corresponds to the following `json` payload:
 
 - Send a POST request to `/sudoku` with the previous `json` payload in the body.
 
-*You may use `?pretty=true` for a human readable output.*
+*You may use `pretty=true` for a human readable output.*
 
 ```console
 curl -X POST http://localhost:7007/sudoku?pretty=true -d '{"Size":4,"PartitionWidth":2,"PartitionHeight":2,"Grid":[[49,46,46,52],[46,46,49,46],[50,46,46,46],[52,46,50,46]]}'
@@ -72,6 +74,32 @@ curl -X POST http://localhost:7007/sudoku?pretty=true -d '{"Size":4,"PartitionWi
 ```
 
 - Done!
+
+### Generate a sudoku puzzle
+
+In order to generate a hard level 9x9 sudoku puzzle, we will send the following request:
+
+```console
+curl 'http://localhost:7007/sudoku?pretty=true&size=9&partitionWidth=3&partitionHeight=3&level=hard'
+```
+
+Server responds with a human readable output of the puzzle as follows:
+
+
+```console
+ 1  .  7 | .  .  . | .  .  .
+ .  .  . | 3  8  . | .  .  .
+ 3  .  . | .  9  . | .  .  5
+-----------------------------
+ .  1  . | .  .  2 | .  .  .
+ .  .  2 | .  .  . | .  .  .
+ .  .  . | .  1  . | 7  .  .
+-----------------------------
+ 2  .  1 | .  .  . | .  .  .
+ 5  .  . | .  3  . | .  .  .
+ 6  .  . | .  .  1 | .  .  .
+```
+
 
 ## TO DO
 
