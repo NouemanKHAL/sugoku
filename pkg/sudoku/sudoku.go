@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
+	"time"
 
-	"github.com/hashicorp/go-multierror"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -22,6 +24,7 @@ type SudokuGrid struct {
 	rowsMap         []map[rune]bool
 	colsMap         []map[rune]bool
 	subGridMap      []map[rune]bool
+	allowedValues   []rune
 }
 
 type coord struct {
@@ -52,6 +55,13 @@ func New(size, partitionWidth, partitionHeight int) (*SudokuGrid, error) {
 	return &sG, nil
 }
 
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 func (sG *SudokuGrid) initMetadata() {
 	sG.rowsMap = make([]map[rune]bool, sG.Size)
 	sG.colsMap = make([]map[rune]bool, sG.Size)
@@ -68,6 +78,10 @@ func (sG *SudokuGrid) initMetadata() {
 		for j := 0; j < len(sG.Grid[i]); j++ {
 			sG.Set(i, j, sG.Grid[i][j])
 		}
+	}
+	sG.allowedValues = make([]rune, 0, max(sG.Size, sG.PartitionHeight*sG.PartitionWidth))
+	for val := '1'; val <= rune('0'+cap(sG.allowedValues)); val++ {
+		sG.allowedValues = append(sG.allowedValues, val)
 	}
 }
 
@@ -114,7 +128,7 @@ func (sG *SudokuGrid) solve(cells []coord) bool {
 				return true
 			}
 
-			/// it didnt work, reset the old value
+			// it didnt work, reset the old value
 			sG.Set(x, y, oldValue)
 		}
 	}
@@ -188,7 +202,91 @@ func (sG *SudokuGrid) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*sG = SudokuGrid(tmpStruct)
+	err = sG.Valid()
+	if err != nil {
+		return err
+	}
 	sG.initMetadata()
+	return nil
+}
+
+// GenerateSudokuGrid returns a SudokuGrid with the given dimensions
+func GenerateSudokuGrid(size, partitionWidth, partitionHeight int) (*SudokuGrid, error) {
+	sG, err := New(size, partitionWidth, partitionHeight)
+	if err != nil {
+		return nil, err
+	}
+	// shuffling the allowed values => random puzzle generation
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(sG.allowedValues), func(i, j int) { sG.allowedValues[i], sG.allowedValues[j] = sG.allowedValues[j], sG.allowedValues[i] })
+	log.Debugf("generating sudoku grid using the allowed values: %v\n", sG.allowedValues)
+
+	if generateSudokuGrid(sG, 0, 0) {
+		return sG, nil
+	}
+
+	return nil, errors.New("could not generate a valid sudoku grid")
+}
+
+func generateSudokuGrid(sG *SudokuGrid, i, j int) bool {
+	// surpasses the last row or last cell (sG.Size - 1, sG.Size - 1)
+	if i >= sG.Size {
+		return true
+	}
+	for _, val := range sG.allowedValues {
+		if sG.canSet(i, j, val) {
+			// try this value
+			sG.Set(i, j, val)
+
+			// determine our next cell
+			newI, newJ := i, j+1
+			if j+1 >= sG.Size {
+				newI = i + 1
+				newJ = 0
+			}
+
+			// continue backtracking on the next cell
+			if generateSudokuGrid(sG, newI, newJ) {
+				return true
+			}
+
+			// it didnt work, reset the old value
+			sG.Set(i, j, EMPTY_CELL)
+		}
+	}
+
+	return false
+}
+
+func getLevelThreshold(level string) (float64, error) {
+	switch level {
+	case "easy":
+		return 0.5, nil
+	case "medium":
+		return 0.65, nil
+	case "hard":
+		return 0.8, nil
+	case "extreme":
+		return 0.95, nil
+	case "robot":
+		return 1, nil
+	}
+	return 0, errors.New("invalid level must be one of the supported levels: easy, medium, hard, extreme, robot")
+}
+
+// SetGridTolevel adds empty cells to match the desired difficulty level
+func (sG *SudokuGrid) SetGridToLevel(level string) error {
+	threshold, err := getLevelThreshold(level)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < sG.Size; i++ {
+		for j := 0; j < len(sG.Grid[i]); j++ {
+			if rand.Float64() < threshold {
+				sG.Set(i, j, EMPTY_CELL)
+			}
+		}
+	}
 	return nil
 }
 
@@ -213,25 +311,22 @@ func (sG *SudokuGrid) ToStringPrettify() string {
 
 // Valid returns all the errors if the SudokuGrid isn't valid, nil otherwise
 func (sG *SudokuGrid) Valid() error {
-	var result error
-
 	if sG.Size%sG.PartitionHeight != 0 || sG.Size%sG.PartitionWidth != 0 || sG.Size%(sG.PartitionHeight*sG.PartitionWidth) != 0 {
-		result = multierror.Append(result, errors.New("size must be divisible by both partition width and partition height"))
+		return errors.New("Size must be divisible by both partition width and partition height")
 	}
-
 	if len(sG.Grid) != sG.Size {
-		result = multierror.Append(result, errors.New("grid size does not match the size attribute"))
+		return errors.New("Grid size does not match the given size attribute")
 	}
 
 	cnt := 0
-	for i := 0; i < sG.Size; i++ {
+	for i := 0; i < len(sG.Grid); i++ {
 		if len(sG.Grid[i]) != sG.Size {
 			cnt++
 		}
 	}
 	if cnt > 0 {
-		result = multierror.Append(result, fmt.Errorf("size of %d row(s) does not match the size attribute", cnt))
+		return fmt.Errorf("%d row(s) sizes do not match the given size attribute", cnt)
 	}
 
-	return result
+	return nil
 }

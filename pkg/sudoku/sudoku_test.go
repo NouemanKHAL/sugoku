@@ -55,7 +55,6 @@ var _ = Describe("Sudoku", func() {
 	})
 
 	Context("Helper functions", func() {
-
 		var (
 			sG *SudokuGrid
 		)
@@ -123,5 +122,24 @@ var _ = Describe("Sudoku", func() {
 			})
 		})
 
+		Context("getLevelThreshold method", func() {
+			It("returns the right threshold", func() {
+				var threshold float64
+				var err error
+				threshold, err = getLevelThreshold("easy")
+				Expect(err).To(BeNil())
+				Expect(threshold).To(Equal(0.5))
+				threshold, err = getLevelThreshold("medium")
+				Expect(err).To(BeNil())
+				threshold, err = getLevelThreshold("hard")
+				Expect(err).To(BeNil())
+				threshold, err = getLevelThreshold("extreme")
+				Expect(err).To(BeNil())
+				threshold, err = getLevelThreshold("robot")
+				Expect(err).To(BeNil())
+				threshold, err = getLevelThreshold("non-existant-level")
+				Expect(err).NotTo(BeNil())
+			})
+		})
 	})
 })

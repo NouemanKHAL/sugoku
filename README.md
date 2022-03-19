@@ -9,6 +9,7 @@ A simple Sudoku REST API (written in Go) designed to solve and generate Sudoku p
 - Go 1.16 or later. [See the install instructions for Go](https://go.dev/doc/install).
 
 ## Usage
+
 ```console
 Usage:
   sugoku [command]
@@ -55,11 +56,13 @@ which corresponds to the following `json` payload:
 - Send a POST request to `/sudoku` with the previous `json` payload in the body.
 
 *You may use `?pretty=true` for a human readable output.*
+
 ```console
-curl -X POST http://localhost:7007/sudoku?pretty=true -d {\"Size\":4,\"PartitionWidth\":2,\"PartitionHeight\":2,\"Grid\":[[49,46,46,52],[46,46,49,46],[50,46,46,46],[52,46,50,46]]}
+curl -X POST http://localhost:7007/sudoku?pretty=true -d '{"Size":4,"PartitionWidth":2,"PartitionHeight":2,"Grid":[[49,46,46,52],[46,46,49,46],[50,46,46,46],[52,46,50,46]]}'
 ```
 
 - Server responds with:
+
 ```console
  1  2 | 3  4
  3  4 | 1  2
@@ -75,7 +78,7 @@ curl -X POST http://localhost:7007/sudoku?pretty=true -d {\"Size\":4,\"Partition
 - Add more unit tests
 - ~~Improve errors handling in the route handlers~~
 - ~~Improve request logging~~
-- Add a Sudoku puzzle generator endpoint
+- ~~Add a Sudoku puzzle generator endpoint~~
 - Add authentication?
 - Support HTTPS?
 - Build a Front End
