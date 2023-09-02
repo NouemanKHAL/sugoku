@@ -11,6 +11,7 @@ import (
 	"github.com/NouemanKHAL/sugoku/pkg/middleware"
 	"github.com/NouemanKHAL/sugoku/pkg/sudoku"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	easy "github.com/t-tomalak/logrus-easy-formatter"
 
@@ -162,7 +163,9 @@ func StartServer(cfg config.Config) {
 	SetupHandlers(r)
 
 	log.Printf("Server listening on port %d", cfg.Port)
-	err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)
+
+	handler := cors.Default().Handler(r)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), handler)
 	if err != nil {
 		log.Fatalf("Error starting server: %s", err)
 	}
